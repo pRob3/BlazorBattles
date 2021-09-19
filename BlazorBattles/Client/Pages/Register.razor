@@ -58,10 +58,13 @@
     <button type="submit" class="btn btn-primary">Register</button>
 </EditForm>
 
-
-
 @code {
     UserRegister user = new UserRegister();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UnitService.LoadUnitsAsync();
+    }
 
     void HandleRegistration()
     {
