@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BlazorBattles.Client.Services
@@ -27,7 +24,7 @@ namespace BlazorBattles.Client.Services
             BananasChanged();
         }
 
-        void BananasChanged() => OnChange.Invoke();
+        private void BananasChanged() => OnChange.Invoke();
 
         public void AddBananas(int amount)
         {
