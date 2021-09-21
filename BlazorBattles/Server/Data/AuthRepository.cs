@@ -19,9 +19,25 @@ namespace BlazorBattles.Server.Data
         }
 
 
-        public Task<ServiceResponse<string>> Login(string email, string password)
+        public async Task<ServiceResponse<string>> Login(string email, string password)
         {
-            throw new NotImplementedException();
+            var response = new ServiceResponse<string>();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower().Equals(email.ToLower()));
+            if(user == null)
+            {
+                response.Success = false;
+                response.Message = "Username or password is wrong!";
+            }
+            else if(!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                response.Success = false;
+                response.Message = "Username or password is wrong!";
+            }
+            else
+            {
+                response.Data = user.Id.ToString();
+            }
+            return response;
         }
 
         public async Task<ServiceResponse<int>> Register(User user, string password)
@@ -56,6 +72,22 @@ namespace BlazorBattles.Server.Data
             {
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using(var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                for (int i = 0; i < computedHash.Length; i++)
+                {
+                    if(computedHash[i] != passwordHash[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
     }
