@@ -2,13 +2,9 @@
 using BlazorBattles.Server.Services;
 using BlazorBattles.Shared;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace BlazorBattles.Server.Controllers
@@ -36,13 +32,38 @@ namespace BlazorBattles.Server.Controllers
         }
 
         [HttpPut("addbananas")]
-        public async Task<IActionResult> AddBananas([FromBody]int bananas)
+        public async Task<IActionResult> AddBananas([FromBody] int bananas)
         {
             var user = await _utilityService.GetUser();
             user.Bananas += bananas;
 
             await _context.SaveChangesAsync();
             return Ok(user.Bananas);
+        }
+
+        [HttpGet("leaderboard")]
+        public async Task<IActionResult> GetLeaderboard()
+        {
+            var users = await _context.Users.Where(u => !u.IsDeleted && u.IsConfirmed).ToListAsync();
+
+            users = users
+                .OrderByDescending(u => u.Victories)
+                .ThenBy(u => u.Defeats)
+                .ThenBy(u => u.DateCreated)
+                .ToList();
+
+            int rank = 1;
+            var response = users.Select(user => new UserStatistic
+            {
+                Rank = rank++,
+                UserId = user.Id,
+                Username = user.Username,
+                Battles = user.Battles,
+                Victories = user.Victories,
+                Defeats = user.Defeats
+            });
+
+            return Ok(response);
         }
     }
 }
